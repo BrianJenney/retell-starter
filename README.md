@@ -1,58 +1,75 @@
 # Retell Voice Agent Starter
 
-A Next.js API that places an AI phone call. POST a name, a reason, and a date/time —
-the agent calls the person and confirms the appointment.
+A Next.js API that places an AI phone call. POST a name, a reason and a date/time —
+the agent calls, confirms the appointment, and hands back a structured summary.
 
 ## Setup
 
 1. `npm install`
-2. `cp .env.example .env.local` and fill it in:
-   - `RETELL_API_KEY` — https://dashboard.retellai.com → API Keys
-   - `RETELL_FROM_NUMBER` — buy a number in the Retell dashboard (Phone Numbers → Buy)
-   - `CALL_TO_NUMBER` — optional default number to dial
-3. Write your prompt in **`agent.ts`** — that's the only file you need to edit.
-4. `npm run agent:deploy` — pushes the prompt to Retell.
-5. `npm run dev`, then:
+2. `cp .env.example .env.local` and add your `RETELL_API_KEY`
+   (https://dashboard.retellai.com → API Keys) and `RETELL_FROM_NUMBER`
+   (Phone Numbers → Buy a local number).
+3. Write your prompt in **`agent.ts`** — that's the only file you edit.
+4. `npm run agent:deploy` — pushes the prompt to Retell and prints an
+   `RETELL_AGENT_ID`. Paste that into `.env.local`.
+5. Set `TO_NUMBER` in `app/api/call/route.ts` to your own phone.
+6. `npm run dev`, then:
 
 ```bash
 curl -X POST localhost:3000/api/call \
   -H 'content-type: application/json' \
   -d '{"name":"Brian","reason":"a teeth cleaning","datetime":"Thursday at 2:30pm"}'
+# → {"call_id":"call_71fc..."}
 ```
 
-Your phone rings. That's it.
+Your phone rings.
+
+## Reading the result
+
+After the call ends, Retell extracts the fields defined in `AGENT.analysis`:
+
+```bash
+curl "localhost:3000/api/call?id=call_71fc..."
+# → {"status":"ended","analysis":{"sentiment":"neutral","confirmed":true,
+#     "summary":"The agent confirmed Brian's appointment..."}}
+```
+
+Analysis takes ~30s after hangup. Note that `status` stays `"ongoing"` for the
+whole call, not just while it's dialing.
 
 ## The endpoint
 
 `POST /api/call`
 
-| field      | required | notes                                            |
-|------------|----------|--------------------------------------------------|
-| `name`     | yes      | who the agent is calling                          |
-| `reason`   | yes      | reason for the visit                              |
-| `datetime` | no       | appointment time; defaults to now                 |
-| `phone`    | no       | E.164 (`+15551234567`); defaults to `CALL_TO_NUMBER` |
+| field      | required | notes                             |
+|------------|----------|-----------------------------------|
+| `name`     | yes      | who the agent is calling          |
+| `reason`   | yes      | reason for the visit              |
+| `datetime` | no       | appointment time; defaults to now |
 
-Returns `{ "call_id": "..." }`. Those three fields land in the prompt as
-`{{name}}`, `{{reason}}` and `{{datetime}}`.
+All three land in the prompt as `{{name}}`, `{{reason}}`, `{{datetime}}`.
 
 ## Files
 
 ```
-agent.ts            ← your prompt, voice, model  (edit this)
-call.ts             ← validation + the Retell call
-app/api/call/route.ts
-scripts/deploy.ts   ← npm run agent:deploy
-call.test.ts        ← npm test
+agent.ts                 ← prompt, voice, analysis fields, tools  (edit this)
+app/api/call/route.ts    ← POST places the call, GET reads the analysis
+scripts/deploy.ts        ← npm run agent:deploy
 ```
 
-## Deploying the API
+## Extending
+
+`AGENT.tools` is empty and deploys fine that way. To let the agent do something
+mid-call — look up availability, take a message — build an endpoint and describe
+it in that array. There's a commented example in `agent.ts`.
+
+## Deploying
 
 ```bash
 npx vercel
 ```
-Add `RETELL_API_KEY` and `RETELL_FROM_NUMBER` in the Vercel project's env vars,
-then `npx vercel --prod`.
+Add `RETELL_API_KEY`, `RETELL_FROM_NUMBER` and `RETELL_AGENT_ID` to the Vercel
+project's env vars, then `npx vercel --prod`.
 
-Re-run `npm run agent:deploy` any time you change the prompt. It updates the
+Re-run `npm run agent:deploy` whenever you change the prompt. It updates the
 agent in place, so Retell keeps the version history.
