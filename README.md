@@ -57,11 +57,22 @@ app/api/call/route.ts    ← POST places the call, GET reads the analysis
 scripts/deploy.ts        ← npm run agent:deploy
 ```
 
+## Tuning
+
+`AGENT.settings` in `agent.ts` holds the optional knobs, each with a comment:
+response latency, interruption sensitivity, backchannel ("mm-hm"), background
+room tone, max call duration, and the silence timeout. The `model` comment
+lists the fast/smart/realtime options.
+
 ## Extending
 
-`AGENT.tools` is empty and deploys fine that way. To let the agent do something
-mid-call — look up availability, take a message — build an endpoint and describe
-it in that array. There's a commented example in `agent.ts`.
+`AGENT.tools` carries Retell's built-in `end_call` — **keep it**. Without it the
+agent has no way to hang up and the call runs until the caller leaves or the
+silence timeout fires.
+
+To let the agent do something mid-call — look up availability, take a message —
+build an endpoint and describe it in that array. There's a commented example in
+`agent.ts`.
 
 ## Deploying
 

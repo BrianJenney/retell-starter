@@ -33,6 +33,8 @@ const llmParams = {
 const llm = llmId ? await client.llm.update(llmId, llmParams) : await client.llm.create(llmParams);
 
 const agentParams = {
+  // Spread first so the explicit fields below always win.
+  ...(AGENT.settings as Partial<AgentParams>),
   agent_name: AGENT.name,
   voice_id: AGENT.voice_id,
   language: 'en-US' as const,
