@@ -57,7 +57,14 @@ All three land in the prompt as `{{name}}`, `{{reason}}`, `{{datetime}}`.
 agent.ts                 ← prompt, voice, model, tools, analysis, settings  (edit this)
 app/api/call/route.ts    ← POST places the call, GET reads the analysis
 scripts/deploy.ts        ← npm run agent:deploy
+.claude/skills/          ← /voice-agent skill for Claude Code
 ```
+
+## Using Claude Code with this repo
+
+`.claude/skills/voice-agent` ships with the repo. Ask Claude Code to change the
+prompt, add a tool, or explain why a call failed and it will pull in the
+conventions and gotchas automatically.
 
 ## Tuning
 
