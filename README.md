@@ -30,8 +30,10 @@ After the call ends, Retell extracts the fields defined in `AGENT.analysis`:
 
 ```bash
 curl "localhost:3000/api/call?id=call_71fc..."
-# → {"status":"ended","analysis":{"sentiment":"neutral","confirmed":true,
-#     "summary":"The agent confirmed Brian's appointment..."}}
+# → {"status":"ended","analysis":{
+#      "sentiment":"neutral",
+#      "needs_rescheduling":false,
+#      "summary":"The agent confirmed Brian's appointment and he agreed to arrive early."}}
 ```
 
 Analysis takes ~30s after hangup. Note that `status` stays `"ongoing"` for the
@@ -52,7 +54,7 @@ All three land in the prompt as `{{name}}`, `{{reason}}`, `{{datetime}}`.
 ## Files
 
 ```
-agent.ts                 ← prompt, voice, analysis fields, tools  (edit this)
+agent.ts                 ← prompt, voice, model, tools, analysis, settings  (edit this)
 app/api/call/route.ts    ← POST places the call, GET reads the analysis
 scripts/deploy.ts        ← npm run agent:deploy
 ```
